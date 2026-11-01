@@ -41,7 +41,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 const DIST = process.env.VERIFY_DIST ?? join(ROOT, 'dist');
 const REPORTS = process.env.VERIFY_REPORTS ?? join(ROOT, 'reports');
 const BASE = (process.env.BASE_PATH ?? '/').replace(/\/?$/, '/');
-const SITE = (process.env.SITE_URL ?? 'http://localhost:4321').replace(/\/$/, '');
+const SITE = new URL(process.env.SITE_URL ?? "http://localhost:4321").origin;
 const LEGACY = /^(?:https?:)?\/\/w3\.cs\.bilkent\.edu\.tr(?=[/?#]|$)/i;
 const reportOnly = process.argv.includes('--report-only');
 

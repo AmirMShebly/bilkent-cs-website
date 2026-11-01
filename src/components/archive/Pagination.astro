@@ -1,0 +1,43 @@
+---
+import Icon from '@/components/Icon.astro';
+import { archivePagePath, type CategoryKey } from '@/config/categories';
+import { href } from '@/lib/url';
+import { t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+  category: CategoryKey;
+  page: number;
+  totalPages: number;
+}
+
+const { lang, category, page, totalPages } = Astro.props;
+const pathFor = (n: number) => href(archivePagePath(category, lang, n));
+const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+---
+{totalPages > 1 && (
+  <nav class="pagination" aria-label={t(lang, 'archive.pagination')}>
+    <p class="pagination__status">{t(lang, 'archive.pageOf', { page, total: totalPages })}</p>
+    <ul role="list">
+      <li>
+        {page > 1 ? (
+          <a class="pagination__step" href={pathFor(page - 1)} rel="prev"><Icon name="arrowLeft" size={16} /> <span>{t(lang, 'archive.prev')}</span></a>
+        ) : (
+          <span class="pagination__step is-disabled" aria-hidden="true"><Icon name="arrowLeft" size={16} /> <span>{t(lang, 'archive.prev')}</span></span>
+        )}
+      </li>
+      {pages.map((n) => (
+        <li class="pagination__number">
+          <a class="pagination__page" href={pathFor(n)} aria-current={n === page ? 'page' : undefined} aria-label={t(lang, 'archive.page', { page: n })}>{n}</a>
+        </li>
+      ))}
+      <li>
+        {page < totalPages ? (
+          <a class="pagination__step" href={pathFor(page + 1)} rel="next"><span>{t(lang, 'archive.next')}</span> <Icon name="arrowRight" size={16} /></a>
+        ) : (
+          <span class="pagination__step is-disabled" aria-hidden="true"><span>{t(lang, 'archive.next')}</span> <Icon name="arrowRight" size={16} /></span>
+        )}
+      </li>
+    </ul>
+  </nav>
+)}

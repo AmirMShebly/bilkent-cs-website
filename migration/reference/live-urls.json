@@ -1,0 +1,144 @@
+{
+  "description": "URLs observed on the live WordPress site (read-only requests). verify-site.ts checks that each one still works in the static site, independently of the site's own redirect configuration.",
+  "checkedOn": "2026-11-01",
+  "method": "curl -L against https://w3.cs.bilkent.edu.tr, plus <link rel=alternate> and feed links in saved live pages",
+  "mustResolve": [
+    {
+      "path": "/tr/duyurular/lisans-arastirma-olanaklari/",
+      "liveTarget": "/tr/duyurular/lisans-arastirma-olanaklari-bahar-2025/"
+    },
+    {
+      "path": "/en/instructor-position/",
+      "liveTarget": "/instructor-positions/"
+    },
+    {
+      "path": "/tr/graduate-programs/",
+      "liveTarget": "/graduate-programs/"
+    },
+    {
+      "path": "/universite-adaylarina/",
+      "liveTarget": "/tr/universite-adaylarina/"
+    },
+    {
+      "path": "/idari/",
+      "liveTarget": "/tr/idari/"
+    },
+    {
+      "path": "/instructor-positions/",
+      "liveTarget": "/instructor-positions/"
+    },
+    {
+      "path": "/news/",
+      "liveTarget": "/news/"
+    },
+    {
+      "path": "/news/page/2/",
+      "liveTarget": "/news/page/2/"
+    },
+    {
+      "path": "/announcements/",
+      "liveTarget": "/announcements/"
+    },
+    {
+      "path": "/uncategorized/",
+      "liveTarget": "/uncategorized/"
+    },
+    {
+      "path": "/tr/haberler/",
+      "liveTarget": "/tr/haberler/"
+    },
+    {
+      "path": "/category/news/",
+      "liveTarget": "/category/news/"
+    },
+    {
+      "path": "/category/news/page/2/",
+      "liveTarget": "/category/news/page/2/"
+    },
+    {
+      "path": "/category/announcements/",
+      "liveTarget": "/category/announcements/"
+    },
+    {
+      "path": "/category/uncategorized/",
+      "liveTarget": "/category/uncategorized/"
+    },
+    {
+      "path": "/tr/category/haberler/",
+      "liveTarget": "/tr/category/haberler/"
+    },
+    {
+      "path": "/tr/category/haberler/page/2/",
+      "liveTarget": "/tr/category/haberler/page/2/"
+    },
+    {
+      "path": "/tr/category/duyurular/",
+      "liveTarget": "/tr/category/duyurular/"
+    },
+    {
+      "path": "/tr/category/siniflandirilmamis/",
+      "liveTarget": "/tr/category/siniflandirilmamis/"
+    }
+  ],
+  "deadOnLive": [
+    "/tr/duyurular/lisans-arastirma-olanaklari-2/",
+    "/tr/duyurular/"
+  ],
+  "feeds": [
+    "/feed/",
+    "/tr/feed/",
+    "/category/news/feed/",
+    "/category/announcements/feed/",
+    "/category/uncategorized/feed/"
+  ],
+  "postsPerPage": {
+    "value": 10,
+    "evidence": "live /news/ lists 10 posts with a link to /news/page/2/"
+  },
+  "archives": [
+    {
+      "path": "/news/",
+      "lang": "en",
+      "category": "news",
+      "wp": "/category/news/",
+      "live": true
+    },
+    {
+      "path": "/announcements/",
+      "lang": "en",
+      "category": "announcements",
+      "wp": "/category/announcements/",
+      "live": true
+    },
+    {
+      "path": "/uncategorized/",
+      "lang": "en",
+      "category": "uncategorized",
+      "wp": "/category/uncategorized/",
+      "live": true
+    },
+    {
+      "path": "/tr/haberler/",
+      "lang": "tr",
+      "category": "news",
+      "wp": "/tr/category/haberler/",
+      "live": true
+    },
+    {
+      "path": "/tr/duyurular/",
+      "lang": "tr",
+      "category": "announcements",
+      "wp": "/tr/category/duyurular/",
+      "live": false,
+      "note": "404 on the live site; the live archive is /tr/category/duyurular/"
+    },
+    {
+      "path": "/tr/siniflandirilmamis/",
+      "lang": "tr",
+      "category": "uncategorized",
+      "wp": "/tr/category/siniflandirilmamis/",
+      "live": false,
+      "note": "the live archive is /tr/category/siniflandirilmamis/"
+    }
+  ]
+}

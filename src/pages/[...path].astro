@@ -1,0 +1,29 @@
+---
+/**
+ * Every page, post, archive page and redirect of the site, generated from
+ * the route registry (src/lib/routes.ts). The homepages have their own files.
+ */
+import PageView from '@/components/views/PageView.astro';
+import PostView from '@/components/views/PostView.astro';
+import ArchiveView from '@/components/views/ArchiveView.astro';
+import RedirectView from '@/components/views/RedirectView.astro';
+import { getSiteIndex, type Route } from '@/lib/routes';
+
+export async function getStaticPaths() {
+  const index = await getSiteIndex();
+  return index.routes
+    .filter((route) => route.kind !== 'home')
+    .map((route) => ({ params: { path: route.path.slice(1, -1) }, props: { route } }));
+}
+
+interface Props {
+  route: Exclude<Route, { kind: 'home' }>;
+}
+
+const { route } = Astro.props;
+const index = await getSiteIndex();
+---
+{route.kind === 'page' && <PageView route={route} index={index} />}
+{route.kind === 'post' && <PostView route={route} index={index} />}
+{route.kind === 'archive' && <ArchiveView route={route} index={index} />}
+{route.kind === 'redirect' && <RedirectView route={route} />}

@@ -1,0 +1,156 @@
+---
+/**
+ * Site header: university links and the language switch, the department
+ * lockup, full-width menu panels on desktop and a full-screen drawer on
+ * phones. Without JavaScript the panels open on hover and focus, and the
+ * phone menu is a plain list (see chrome.css and scripts/site.ts).
+ */
+import Icon from '@/components/Icon.astro';
+import Picture from '@/components/Picture.astro';
+import { isGroup, localize, mainNav, utilityNav, type NavLink } from '@/config/navigation';
+import { site } from '@/config/site';
+import { hasMedia } from '@/lib/images';
+import type { SwitchTarget } from '@/lib/routes';
+import { href, isExternal, stripBase } from '@/lib/url';
+import { languages, t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+  /** Where the language switch leads, and whether it is this page's translation. */
+  switchTarget: SwitchTarget;
+}
+
+const { lang, switchTarget } = Astro.props;
+const here = stripBase(Astro.url.pathname);
+const other: Lang = lang === 'en' ? 'tr' : 'en';
+const home = lang === 'en' ? '/' : '/tr/';
+const groups = mainNav.filter(isGroup);
+const contact = mainNav.find((i) => !isGroup(i)) as NavLink | undefined;
+const utilityLinks = utilityNav.flatMap((item) => (isGroup(item) ? item.children : [item]));
+// A group is current when this page is one of its links or lives below one (posts, archive pages, child pages).
+const within = (path: string) => !isExternal(path) && path !== '/' && path !== '/tr/' && (here === path || here.startsWith(path));
+const switchNotice = switchTarget.exact
+  ? undefined
+  : t(lang, switchTarget.fallback === 'archive' ? 'lang.noTranslationArchive' : 'lang.noTranslation');
+---
+<a class="skip" href="#main">{t(lang, 'a11y.skip')}</a>
+<header class="site" data-site-header>
+  <div class="utility">
+    <div class="container utility__inner">
+      <nav aria-label={t(lang, 'a11y.utilityNav')}>
+        <ul class="utility__links" role="list">
+          {utilityLinks.map((link) => <li><a href={href(localize(link.href, lang))}>{link.label[lang]}</a></li>)}
+        </ul>
+      </nav>
+      <a class="langswitch" href={href(switchTarget.path)} hreflang={languages[other].htmlLang} title={switchNotice}>
+        <Icon name="globe" size={16} />
+        <span lang={languages[other].htmlLang}>{languages[other].label}</span>
+        {switchNotice && <span class="visually-hidden"> ({switchNotice})</span>}
+      </a>
+    </div>
+  </div>
+
+  <div class="masthead">
+    <div class="container masthead__inner">
+      <a class="brand" href={href(home)}>
+        {hasMedia(site.emblem) && <Picture src={site.emblem} alt="" sizes="46px" class="brand__mark" loading="eager" />}
+        <span class="brand__text">
+          <span class="brand__uni">{t(lang, 'site.university')}</span>{' '}
+          <span class="brand__dept">{t(lang, 'site.department')}</span>
+        </span>
+      </a>
+
+      <nav class="nav" aria-label={t(lang, 'a11y.mainNav')}>
+        <ul class="nav__list" role="list">
+          {groups.map((group, i) => (
+            <li class:list={['nav__item', { 'is-current': group.children.some((c) => within(localize(c.href, lang))) }]}>
+              <button type="button" class="nav__toggle" aria-expanded="false" aria-controls={`mega-${i}`} data-mega-toggle>
+                {group.label[lang]}
+                <Icon name="chevronDown" size={16} />
+              </button>
+              <div class="mega" id={`mega-${i}`}>
+                <div class="container mega__inner">
+                  <p class="mega__title">{group.label[lang]}</p>
+                  <ul class="mega__links" role="list">
+                    {group.children.map((child) => {
+                      const target = localize(child.href, lang);
+                      return (
+                        <li>
+                          <a href={href(target)} aria-current={target === here ? 'page' : undefined}>
+                            {child.label[lang]}
+                            {isExternal(target) ? <Icon name="external" size={16} label={t(lang, 'a11y.external')} /> : <Icon name="arrowRight" size={16} />}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              </div>
+            </li>
+          ))}
+          {contact && (
+            <li class:list={['nav__item', { 'is-current': within(localize(contact.href, lang)) }]}>
+              <a class="nav__link" href={href(localize(contact.href, lang))} aria-current={localize(contact.href, lang) === here ? 'page' : undefined}>{contact.label[lang]}</a>
+            </li>
+          )}
+        </ul>
+      </nav>
+
+      <a class="langswitch langswitch--compact" href={href(switchTarget.path)} hreflang={languages[other].htmlLang} title={switchNotice}>
+        <span lang={languages[other].htmlLang}>{other.toUpperCase()}<span class="visually-hidden"> ({languages[other].label})</span></span>
+        {switchNotice && <span class="visually-hidden"> ({switchNotice})</span>}
+      </a>
+      <button type="button" class="icon-btn menu-btn" aria-expanded="false" aria-controls="drawer" data-drawer-open>
+        <Icon name="menu" />
+        <span>{t(lang, 'a11y.menu')}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="drawer" id="drawer" hidden data-drawer data-label={t(lang, 'a11y.mainNav')}>
+    <div class="drawer__top">
+      <a class="langswitch langswitch--light" href={href(switchTarget.path)} hreflang={languages[other].htmlLang}>
+        <Icon name="globe" size={16} />
+        <span lang={languages[other].htmlLang}>{languages[other].label}</span>
+        {switchNotice && <span class="visually-hidden"> ({switchNotice})</span>}
+      </a>
+      <button type="button" class="icon-btn" data-drawer-close>
+        <Icon name="close" />
+        <span>{t(lang, 'a11y.closeMenu')}</span>
+      </button>
+    </div>
+    <nav class="drawer__groups" aria-label={t(lang, 'a11y.mainNav')}>
+      {groups.map((group, i) => (
+        <div class:list={['drawer__group', { 'is-current': group.children.some((c) => within(localize(c.href, lang))) }]}>
+          <button type="button" aria-expanded="false" aria-controls={`drawer-${i}`} data-accordion>
+            {group.label[lang]}
+            <Icon name="chevronDown" />
+          </button>
+          <ul class="drawer__links" id={`drawer-${i}`} role="list">
+            {group.children.map((child) => {
+              const target = localize(child.href, lang);
+              return (
+                <li>
+                  <a href={href(target)} aria-current={target === here ? 'page' : undefined}>
+                    {child.label[lang]}
+                    {isExternal(target) && <Icon name="external" size={16} label={t(lang, 'a11y.external')} />}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+      {contact && (
+        <div class="drawer__group">
+          <a href={href(localize(contact.href, lang))}>{contact.label[lang]} <Icon name="arrowRight" /></a>
+        </div>
+      )}
+    </nav>
+    <div class="drawer__utility">
+      <ul role="list">
+        {utilityLinks.map((link) => <li><a href={href(localize(link.href, lang))}>{link.label[lang]}</a></li>)}
+      </ul>
+    </div>
+  </div>
+</header>

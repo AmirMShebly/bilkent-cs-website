@@ -1,0 +1,23 @@
+---
+/**
+ * GitHub Pages serves this file for any unknown URL. The language of the
+ * request is not known, so the page is bilingual.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Icon from '@/components/Icon.astro';
+import { href } from '@/lib/url';
+import { t } from '@/i18n/ui';
+---
+<BaseLayout lang="en" title={t('en', 'notFound.title')} alternates={{}} canonical={false} switchTarget={{ path: '/tr/', exact: false, fallback: 'home' }}>
+  <section class="container not-found">
+    <p class="eyebrow">404</p>
+    <h1>{t('en', 'notFound.title')}</h1>
+    <p>{t('en', 'notFound.body')}</p>
+    <p><a class="btn" href={href('/')}>{t('en', 'notFound.home')} <Icon name="arrowRight" size={18} /></a></p>
+    <div class="not-found__alt" lang="tr">
+      <h2>{t('tr', 'notFound.title')}</h2>
+      <p>{t('tr', 'notFound.body')}</p>
+      <p><a class="link-arrow" href={href('/tr/')}>{t('tr', 'notFound.home')} <Icon name="arrowRight" size={18} /></a></p>
+    </div>
+  </section>
+</BaseLayout>

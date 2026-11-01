@@ -1,0 +1,503 @@
+/*
+ * Migrated WordPress content inside .prose: block layout classes (the export
+ * has no theme CSS), figures, tables, embeds, e-mail addresses, placeholders.
+ * Typography for .prose itself is in pages.css.
+ */
+
+/* ---------- Block layouts ---------- */
+.ds .prose .aligncenter {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.ds .prose .aligncenter img {
+  margin-inline: auto;
+}
+
+.ds .prose .alignleft {
+  float: left;
+  max-width: 45%;
+  margin: 0.3em var(--s-6) var(--s-4) 0;
+}
+
+.ds .prose .alignright {
+  float: right;
+  max-width: 45%;
+  margin: 0.3em 0 var(--s-4) var(--s-6);
+}
+
+.ds .prose .wp-block-group::after,
+.ds .prose .wp-block-column::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+.ds .prose .is-layout-flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+}
+
+.ds .prose .is-layout-flex.is-vertical {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ds .prose .is-layout-flex > * {
+  margin: 0;
+}
+
+.ds .prose .is-content-justification-center {
+  justify-content: center;
+}
+
+.ds .prose .is-content-justification-right {
+  justify-content: flex-end;
+}
+
+.ds .prose .wp-block-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-6);
+}
+
+.ds .prose .wp-block-column {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.ds .prose .wp-block-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--s-3);
+}
+
+.ds .prose .wp-block-gallery figure {
+  margin: 0;
+}
+
+.ds .prose .wp-block-gallery img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ds .prose .wp-block-image img {
+  display: block;
+}
+
+.ds .prose .is-style-rounded img {
+  border-radius: var(--radius-pill);
+}
+
+.ds .prose .has-text-align-center {
+  text-align: center;
+}
+
+.ds .prose .has-text-align-right {
+  text-align: right;
+}
+
+/* WordPress font-size presets are neutralised: the site's type scale applies. */
+.ds .prose :is(.has-small-font-size, .has-medium-font-size, .has-large-font-size) {
+  font-size: inherit;
+}
+
+.ds .prose .has-background {
+  padding: var(--s-5);
+  border-radius: var(--radius-md);
+}
+
+.ds .prose .has-base-background-color {
+  background: var(--white);
+}
+
+.ds .prose .has-tertiary-background-color {
+  background: var(--ink-50);
+}
+
+.ds .prose .has-primary-background-color {
+  color: var(--white);
+  background: var(--navy-900);
+}
+
+.ds .prose .has-primary-color {
+  color: var(--blue-600);
+}
+
+.ds .prose .has-secondary-color {
+  color: var(--red-700);
+}
+
+.ds .prose .wp-block-spacer {
+  height: var(--s-6) !important;
+}
+
+.ds .prose hr,
+.ds .prose .wp-block-separator {
+  height: 0;
+  margin-block: var(--s-10);
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.ds .prose blockquote {
+  margin-inline: 0;
+  padding-left: var(--s-5);
+  color: var(--ink-700);
+  border-left: 3px solid var(--red-600);
+}
+
+.ds .prose mark {
+  padding: 0.1em 0.25em;
+  color: inherit;
+  background: var(--blue-100);
+  border-radius: 3px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.ds .prose :is(h2, h3, h4) :is(strong, b) {
+  font-weight: inherit;
+}
+
+.ds .prose a :is(strong, b) {
+  color: inherit;
+}
+
+.ds .prose h4 {
+  margin-top: 1.8em;
+  font-size: var(--text-lg);
+}
+
+.ds .prose h4 + * {
+  margin-top: 0.6em;
+}
+
+/* Lists made only of links: roomier rows for touch screens. */
+.ds .prose .link-list li + li {
+  margin-top: 0.35em;
+}
+
+.ds .prose .link-list a {
+  padding-block: 0.15em;
+}
+
+/* Long lists of short items use two columns on wide screens. */
+@media (min-width: 64em) {
+  .ds .prose .list--columns {
+    max-width: 64rem;
+    columns: 2;
+    column-gap: var(--s-12);
+  }
+
+  .ds .prose .list--columns > li {
+    break-inside: avoid;
+  }
+
+  .ds .prose .list--columns > li:first-child {
+    margin-top: 0;
+  }
+}
+
+/* ---------- Tables ---------- */
+.ds .prose .table-scroll {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  /* Edge shadows show that the table scrolls sideways. */
+  background:
+    linear-gradient(90deg, var(--white) 30%, rgb(255 255 255 / 0)) left / 2.5rem 100% no-repeat local,
+    linear-gradient(270deg, var(--white) 30%, rgb(255 255 255 / 0)) right / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, rgb(6 22 52 / 0.16), transparent) left / 0.9rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, rgb(6 22 52 / 0.16), transparent) right / 0.9rem 100% no-repeat scroll;
+}
+
+.ds .prose table {
+  width: 100%;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.ds .prose th,
+.ds .prose td {
+  padding: var(--s-3) var(--s-4);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ds .prose thead th {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-600);
+  background: var(--ink-50);
+  border-bottom-color: var(--color-border-strong);
+}
+
+.ds .prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.ds .prose tbody tr:hover td {
+  background: var(--blue-50);
+}
+
+.ds .prose .is-style-stripes tbody tr:nth-child(odd) td {
+  background: var(--ink-50);
+}
+
+/* A short label column (a year) stays in view while the rest scrolls. */
+.ds .prose .table--label-col th:first-child,
+.ds .prose .table--label-col td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  white-space: nowrap;
+  background: var(--white);
+  box-shadow: 1px 0 0 var(--color-border);
+}
+
+.ds .prose .table--label-col thead th:first-child {
+  background: var(--ink-50);
+}
+
+/* Further header rows describe the scrolling columns; their first cell must not stay over the labels. */
+.ds .prose .table--label-col thead tr + tr th:first-child {
+  position: static;
+  box-shadow: none;
+}
+
+.ds .prose .table--label-col thead th.th-short {
+  white-space: nowrap;
+}
+
+/* Simple tables become one card per row on phones. */
+@media (max-width: 39.99em) {
+  .ds .prose .table-scroll:has(.table--stack) {
+    background: none;
+  }
+
+  .ds .prose .table--stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .ds .prose .table--stack,
+  .ds .prose .table--stack tbody,
+  .ds .prose .table--stack tr,
+  .ds .prose .table--stack td {
+    display: block;
+  }
+
+  .ds .prose .table--stack tr {
+    padding: var(--s-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .ds .prose .table--stack tr:last-child {
+    border-bottom: 0;
+  }
+
+  .ds .prose .table--stack td {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: var(--s-3);
+    padding: var(--s-1) 0;
+    border: 0;
+  }
+
+  .ds .prose .table--stack tbody tr:hover td {
+    background: none;
+  }
+
+  .ds .prose .table--stack td::before {
+    content: attr(data-label);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-500);
+  }
+}
+
+/* ---------- Embeds (click to load) ---------- */
+.ds .embed {
+  margin-inline: 0;
+}
+
+.ds .embed__frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: 11rem;
+  padding: var(--s-6);
+  text-align: center;
+  background: var(--ink-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.ds .embed__frame.is-loaded {
+  aspect-ratio: var(--embed-ratio, 16 / 9);
+  max-height: 40rem;
+  padding: 0;
+  border: 0;
+}
+
+.ds .embed__frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: var(--radius-md);
+}
+
+.ds .embed__notice {
+  max-width: 32rem;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.ds .embed__load {
+  min-height: 2.75rem;
+  padding: 0 var(--s-5);
+  font: inherit;
+  font-weight: 650;
+  color: var(--white);
+  background: var(--blue-600);
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.ds .embed__load:hover {
+  background: var(--navy-900);
+}
+
+.ds .embed__caption {
+  margin-top: var(--s-2);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.ds .embed--link .embed__caption {
+  margin: 0;
+  padding: var(--s-4) var(--s-5);
+  background: var(--ink-50);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.ds .embed__provider {
+  margin-right: var(--s-2);
+  font-weight: 700;
+  color: var(--color-text-subtle);
+}
+
+/* ---------- Addresses, unresolved links, missing media ---------- */
+/* E-mail addresses are drawn from data attributes (anti-harvesting), and turned into links by script. */
+.ds .email:empty::before {
+  content: attr(data-user) '\0040' attr(data-domain);
+  unicode-bidi: bidi-override;
+  direction: ltr;
+}
+
+.ds .email:not(:empty)::after {
+  content: ' – ' attr(data-user) '\0040' attr(data-domain);
+}
+
+.ds .link-unresolved {
+  text-decoration: underline dotted var(--ink-500);
+  cursor: help;
+}
+
+.ds .media--missing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  max-width: 100%;
+  max-height: 14rem;
+  aspect-ratio: 16 / 10;
+  padding: var(--s-4);
+  font-size: var(--text-sm);
+  text-align: center;
+  color: var(--ink-600);
+  background: repeating-linear-gradient(135deg, var(--ink-100) 0 12px, var(--ink-50) 12px 24px);
+  border-radius: var(--radius-md);
+}
+
+.ds a .media--linked {
+  border: 1px dashed currentColor;
+}
+
+.ds a .media--linked .media__label {
+  font-weight: 650;
+  text-decoration: underline;
+  color: var(--blue-600);
+}
+
+@media (max-width: 39.99em) {
+  .ds .prose .alignleft,
+  .ds .prose .alignright {
+    float: none;
+    max-width: 100%;
+    margin: 0 0 var(--s-4);
+  }
+}
+
+/* ---------- Text versions of informational images ---------- */
+.ds .prose .image-text {
+  max-width: var(--measure);
+  margin-top: var(--s-3);
+  font-size: var(--text-sm);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.ds .prose .image-text > summary {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 var(--s-4);
+  font-weight: 650;
+  color: var(--blue-600);
+  cursor: pointer;
+}
+
+.ds .prose .image-text[open] > summary {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.ds .prose .image-text__body {
+  padding: var(--s-4);
+}
+
+.ds .prose .image-text__body > * + * {
+  margin-top: var(--s-3);
+}
+
+
+.ds .prose .image-text__body li + li {
+  margin-top: 0.25em;
+}
+
+.ds .prose .image-text__body .table-scroll {
+  margin-top: var(--s-2);
+}

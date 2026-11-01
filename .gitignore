@@ -1,0 +1,30 @@
+# build output
+dist/
+.astro/
+
+# Responsive image variants, regenerated from public/wp-content/uploads/ by
+# `npm run media:process` (part of `npm run build`).
+public/_media/
+
+# Written by `npm run verify` and `npm run qa:browser`.
+# The reports of the delivered build are kept in docs/verification/.
+reports/
+
+# dependencies
+node_modules/
+
+# logs and local env
+npm-debug.log*
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Only the filtered public content pack (migration/source/public_content.json)
+# belongs in the repository. Never commit a full WordPress export, a database
+# dump or WordPress configuration: they contain private pages and accounts.
+migration/source/*.xml
+migration/source/*.zip
+migration/source/*.sql
+migration/source/*.sql.gz
+wp-config.php

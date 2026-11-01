@@ -1,0 +1,33 @@
+---
+/**
+ * A person's photograph, cropped to a square around the most salient region.
+ * People without a photograph in the source get their initials. A photograph
+ * that is in the source but missing from public/ gets the labelled placeholder
+ * that the verification report counts, so a missing file never passes for
+ * "no photo".
+ */
+import Picture from '@/components/Picture.astro';
+import { hasMedia } from '@/lib/images';
+import { missingMediaHtml } from '@/lib/placeholder';
+import { t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  src?: string;
+  name: string;
+  sizes: string;
+  lang: Lang;
+  loading?: 'lazy' | 'eager';
+}
+
+const { src, name, sizes, lang, loading } = Astro.props;
+// Initials from the name without academic titles ("Prof.", "Dr.", "A.").
+const words = name.split(/[\s,]+/).filter((w) => /^\p{Lu}\p{Ll}/u.test(w) && !w.endsWith('.'));
+const initials = [words[0], words.at(-1)].filter(Boolean).map((w) => w![0]).join('');
+---
+{!src ? (
+  <span class="avatar" aria-hidden="true">{initials}</span>
+) : hasMedia(src) ? (
+  <Picture src={src} alt="" sizes={sizes} square loading={loading} />
+) : (
+  <Fragment set:html={missingMediaHtml({ src, alt: name, label: t(lang, 'media.photoMissing'), variant: 'photo' })} />
+)}

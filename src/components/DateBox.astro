@@ -1,0 +1,18 @@
+---
+/** A calendar-style date (day over short month); the full date is in the datetime attribute. */
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  iso: string;
+  lang: Lang;
+}
+
+const { iso, lang } = Astro.props;
+const locale = lang === 'tr' ? 'tr-TR' : 'en-US';
+const date = new Date(`${iso}Z`);
+const part = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale, { ...options, timeZone: 'UTC' }).format(date);
+---
+<time class="datebox" datetime={iso}>
+  <span class="datebox__day">{part({ day: 'numeric' })}</span>{' '}
+  <span class="datebox__month">{part({ month: 'short' })}</span>
+</time>

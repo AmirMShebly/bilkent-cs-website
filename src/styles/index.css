@@ -1,0 +1,14 @@
+/*
+ * The site's design system. Everything is scoped to the .ds class on <body>.
+ * Fonts are self-hosted (Fontsource, SIL Open Font License) with Latin
+ * Extended for Turkish.
+ */
+@import '@fontsource-variable/source-sans-3/index.css';
+@import '@fontsource-variable/source-serif-4/opsz.css';
+@import '@fontsource-variable/source-serif-4/opsz-italic.css';
+@import './tokens.css';
+@import './base.css';
+@import './chrome.css';
+@import './home.css';
+@import './pages.css';
+@import './prose.css';

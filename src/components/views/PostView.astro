@@ -1,0 +1,110 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Breadcrumbs from '@/components/layout/Breadcrumbs.astro';
+import Icon from '@/components/Icon.astro';
+import Prose from '@/components/content/Prose.astro';
+import DateBox from '@/components/DateBox.astro';
+import { categories, type CategoryKey } from '@/config/categories';
+import { formatDate, leadImage } from '@/lib/content';
+import { latestIn } from '@/lib/data';
+import { enhanceHtml } from '@/lib/html/enhance';
+import { transformContent } from '@/lib/html/transform';
+import { hasMedia } from '@/lib/images';
+import { languageTarget, type PostRoute, type SiteIndex } from '@/lib/routes';
+import { breadcrumbsFor, describe, linkIndexOf } from '@/lib/sections';
+import { href } from '@/lib/url';
+import { languages, t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  route: PostRoute;
+  index: SiteIndex;
+}
+
+const { route, index } = Astro.props;
+const { entry, lang, category } = route;
+const archive = categories[category][lang];
+const body = enhanceHtml(transformContent(entry.html, { lang, index: linkIndexOf(index) }), {
+  anchorLabel: t(lang, 'a11y.anchor'),
+  leadParagraph: true,
+});
+
+// Neighbours in the same archive and language, newest first like the archive
+// (a post can belong to several categories, as in WordPress).
+const siblings = index.posts.filter((p) => p.lang === lang && p.categories.includes(category));
+const at = siblings.findIndex((p) => p.path === entry.path);
+const newer = at > 0 ? siblings[at - 1] : undefined;
+const older = at >= 0 ? siblings[at + 1] : undefined;
+const otherCategories = entry.categories.filter((c) => c !== category && c in categories) as CategoryKey[];
+const related = (await latestIn(category, lang, 5, entry.path)).filter((p) => p !== newer && p !== older).slice(0, 4);
+const translation = languageTarget(index, route);
+const other: Lang = lang === 'en' ? 'tr' : 'en';
+const image = leadImage(entry);
+---
+<BaseLayout
+  lang={lang}
+  title={route.title}
+  description={describe(entry)}
+  alternates={index.alternates.get(route.path) ?? { [lang]: route.path }}
+  switchTarget={translation}
+  ogType="article"
+  ogImage={image && hasMedia(image.src) ? image.src : undefined}
+>
+  <article>
+    <header class="container article-head">
+      <Breadcrumbs lang={lang} items={breadcrumbsFor(route, index)} />
+      <h1>{route.title}</h1>
+      <div class="article-head__meta">
+        <span class="visually-hidden">{t(lang, 'post.category')}:</span>{' '}
+        <a class="tag" href={href(archive.path)}>{archive.name}</a>{' '}
+        {otherCategories.map((c) => <><a class="tag" href={href(categories[c][lang].path)}>{categories[c][lang].name}</a>{' '}</>)}
+        <span class="meta"><time datetime={entry.publishedAt}>{formatDate(entry.publishedAt, lang, 'long')}</time></span>
+        {translation.exact && (
+          <a class="lang-note" href={href(translation.path)} hreflang={languages[other].htmlLang}>
+            <Icon name="globe" size={16} />
+            <span lang={languages[other].htmlLang}>{t(lang, 'post.readIn')}</span>
+          </a>
+        )}
+      </div>
+    </header>
+
+    <div class="container article-layout">
+      <div class="article-layout__main">
+        <Prose html={body.html} />
+        <nav class="pager" aria-label={t(lang, 'post.nav')}>
+          {older ? (
+            <a href={href(older.path)} rel="prev">
+              <span class="pager__dir"><Icon name="arrowLeft" size={16} /> {t(lang, 'post.prev')}</span>
+              <span class="pager__title">{older.title}</span>
+            </a>
+          ) : <span />}
+          {newer && (
+            <a class="pager__next" href={href(newer.path)} rel="next">
+              <span class="pager__dir">{t(lang, 'post.next')} <Icon name="arrowRight" size={16} /></span>
+              <span class="pager__title">{newer.title}</span>
+            </a>
+          )}
+        </nav>
+      </div>
+
+      <aside class="aside-sticky" aria-labelledby="related-title">
+        <section class="aside-block">
+          <h2 id="related-title">{t(lang, 'post.moreIn', { name: archive.name.toLocaleLowerCase(lang) })}</h2>
+          {related.length > 0 && (
+            <ol class="notices notices--plain" role="list">
+              {related.map((post) => (
+                <li class="notice">
+                  <DateBox iso={post.publishedAt} lang={lang} />
+                  <div>
+                    <h3 class="notice__title"><a href={href(post.path)}>{post.title}</a></h3>
+                    <p class="meta">{new Date(`${post.publishedAt}Z`).getUTCFullYear()}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+          <p class="notices__more"><a class="link-arrow" href={href(archive.path)}>{t(lang, 'post.back', { name: archive.name })} <Icon name="arrowRight" size={18} /></a></p>
+        </section>
+      </aside>
+    </div>
+  </article>
+</BaseLayout>

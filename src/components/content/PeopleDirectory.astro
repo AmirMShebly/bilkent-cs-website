@@ -1,0 +1,155 @@
+---
+/**
+ * A people page (faculty, staff, students...) as a directory. Every line of
+ * each source entry is shown in its original order and wording; the layout
+ * only adds icons for contact details (the source labels stay as
+ * screen-reader text), photographs, and research-area links derived from the
+ * research-area pages. Search and filters are added by scripts/site.ts.
+ */
+import Icon from '@/components/Icon.astro';
+import Portrait from '@/components/Portrait.astro';
+import Inlines from './Inlines.astro';
+import type { Profile, ResearchArea } from '@/lib/data';
+import type { Inline, PersonLine } from '@/lib/html/people';
+import { href } from '@/lib/url';
+import { t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  people: Profile[];
+  lang: Lang;
+  /** Compact cards with small portraits (student lists). */
+  dense?: boolean;
+  /** Research areas in the department's order, for the area filter. */
+  areas?: ResearchArea[];
+}
+
+const { people, lang, dense = false, areas = [] } = Astro.props;
+
+const text = (inlines: Inline[]) => inlines.map((i) => (i.type === 'email' ? `${i.user}@${i.domain}` : i.text)).join('').trim();
+const isEmail = (line: PersonLine) => line.kind === 'field' && line.inlines.some((i) => i.type === 'email');
+const iconFor = (line: PersonLine) => {
+  if (line.kind !== 'field') return undefined;
+  if (isEmail(line)) return 'mail' as const;
+  if (/^(phone|tel|telefon)$/i.test(line.label ?? '')) return 'phone' as const;
+  if (/^(office|ofis|oda|room)$/i.test(line.label ?? '')) return 'office' as const;
+  return undefined;
+};
+const isPhone = (line: PersonLine) => iconFor(line) === 'phone';
+const isShortField = (line: PersonLine) => line.kind === 'field' && text(line.inlines).length <= 40;
+const linkCount = (line: PersonLine) => line.inlines.filter((i) => i.type === 'link').length;
+
+// Consecutive short fields form one contact list; everything else stays a line of its own.
+type Block = { kind: 'contact'; lines: PersonLine[] } | { kind: 'line'; line: PersonLine };
+function blocks(lines: PersonLine[]): Block[] {
+  const out: Block[] = [];
+  for (const line of lines) {
+    const last = out.at(-1);
+    if (isShortField(line) && last?.kind === 'contact') last.lines.push(line);
+    else if (isShortField(line)) out.push({ kind: 'contact', lines: [line] });
+    else out.push({ kind: 'line', line });
+  }
+  return out;
+}
+
+// Filters: research areas (faculty) or the program line of student lists.
+const usedAreas = areas.filter((a) => people.some((p) => p.areas.some((pa) => pa.path === a.path)));
+const programs = dense ? [...new Set(people.map((p) => p.program).filter((p): p is string => Boolean(p)))] : [];
+const programFilter = programs.length > 1 && programs.length <= 6;
+const filterKey = (p: Profile) => (usedAreas.length ? p.areas.map((a) => a.path).join('|') : programFilter ? p.program ?? '' : '');
+const searchable = people.length > 12 || usedAreas.length > 0 || programFilter;
+// Initials stand in only for people the source shows without a photograph.
+const monograms = people.some((p) => !p.photo) && people.some((p) => p.photo);
+const count = (program: string) => people.filter((p) => p.program === program).length;
+const sizes = dense ? '72px' : '(min-width: 64em) 280px, (min-width: 40em) 45vw, 88px';
+// Role and title lines above the name; every card reserves the same room so names line up across a row.
+const linkedName = (p: Profile) => p.nameInlines.some((i) => i.type !== 'text');
+const kickerLines = Math.max(0, ...people.map((p) => (p.role ? 1 : 0) + (p.title && !linkedName(p) ? 1 : 0)));
+---
+<div class="directory" data-directory>
+  {searchable && (
+    <div class="toolbar" hidden data-js-only>
+      <div class="search">
+        <Icon name="search" />
+        <label class="visually-hidden" for="directory-search">{t(lang, 'people.searchLabel')}</label>
+        <input id="directory-search" type="search" autocomplete="off" placeholder={t(lang, 'people.filterHint')} data-directory-search />
+      </div>
+      {usedAreas.length > 0 && (
+        <div class="filters" role="group" aria-label={t(lang, 'people.byArea')}>
+          <button type="button" class="chip" aria-pressed="true" data-area="">{t(lang, 'people.allAreas')}</button>
+          {usedAreas.map((a) => <button type="button" class="chip" aria-pressed="false" data-area={a.path}>{a.title}</button>)}
+        </div>
+      )}
+      {programFilter && (
+        <div class="filters" role="group" aria-label={t(lang, 'people.byProgram')}>
+          <button type="button" class="chip" aria-pressed="true" data-area="">{t(lang, 'people.all')} · {people.length}</button>
+          {programs.map((pr) => <button type="button" class="chip" aria-pressed="false" data-area={pr}>{pr} · {count(pr)}</button>)}
+        </div>
+      )}
+      <p class="toolbar__status" aria-live="polite" data-directory-status data-template={t(lang, 'people.count', { shown: '{shown}', total: '{total}' })}></p>
+    </div>
+  )}
+
+  <ul class:list={['people', { 'people--dense': dense }]} role="list" style={kickerLines ? `--kicker-lines: ${kickerLines}` : undefined}>
+    {people.map((p) => (
+      <li class:list={['person', { 'person--dense': dense }]} data-person data-areas={filterKey(p)}>
+        <div class="person__photo">
+          <Portrait src={p.photo} name={p.name} sizes={sizes} lang={lang} />
+        </div>
+        <div class="person__body">
+          {kickerLines > 0 && (
+            <div class="person__kicker">
+              {p.role && <p class="person__role">{p.role}</p>}
+              {p.title && !linkedName(p) && <p class="person__title">{p.title}</p>}
+            </div>
+          )}
+          <h2 class="person__name">{linkedName(p) ? <Inlines inlines={p.nameInlines} lang={lang} /> : p.name}</h2>
+          {blocks(p.lines).map((block) =>
+            block.kind === 'contact' ? (
+              <ul class="person__contact" role="list">
+                {block.lines.map((line) => {
+                  const icon = iconFor(line);
+                  return (
+                    <li>
+                      {icon ? (
+                        <>
+                          <Icon name={icon} size={18} />
+                          <span class="visually-hidden">{line.label}:</span>{' '}
+                        </>
+                      ) : (
+                        <><span class="person__label">{line.label}</span>{' '}</>
+                      )}
+                      <span class="person__value"><Inlines inlines={line.inlines} lang={lang} phone={isPhone(line)} /></span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : block.line.kind === 'field' ? (
+              <div class="person__about">
+                <p class="person__label">{block.line.label}</p>
+                <p><Inlines inlines={block.line.inlines} lang={lang} /></p>
+              </div>
+            ) : block.line.kind === 'links' && linkCount(block.line) === 1 ? (
+              <p class="person__homepage"><Inlines inlines={block.line.inlines} lang={lang} /></p>
+            ) : block.line.kind === 'links' ? (
+              <p class="person__links"><Inlines inlines={block.line.inlines} lang={lang} /></p>
+            ) : (
+              <p class:list={['person__text', { 'person__program': dense && text(block.line.inlines) === p.program }]}><Inlines inlines={block.line.inlines} lang={lang} /></p>
+            ),
+          )}
+          {usedAreas.length > 0 && p.areas.length > 0 && (
+            <ul class="person__areas" role="list" aria-label={t(lang, 'people.areas')}>
+              {p.areas.map((a) => <li><a href={href(a.path)}>{a.title}</a></li>)}
+            </ul>
+          )}
+        </div>
+      </li>
+    ))}
+  </ul>
+  <p class="directory-empty" hidden data-directory-empty>{t(lang, 'people.none')}</p>
+  {(usedAreas.length > 0 || monograms) && (
+    <div class="directory-note">
+      {usedAreas.length > 0 && <p>{t(lang, 'people.areasNote')}</p>}
+      {monograms && <p>{t(lang, 'people.photosNote')}</p>}
+    </div>
+  )}
+</div>

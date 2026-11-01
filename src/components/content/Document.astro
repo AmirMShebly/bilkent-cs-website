@@ -1,0 +1,41 @@
+---
+/**
+ * Migrated content with a table of contents built from its own headings:
+ * sticky beside the text on wide screens, a collapsible list on phones.
+ * Pages with fewer than two sections get the text column alone.
+ */
+import Icon from '@/components/Icon.astro';
+import Prose from './Prose.astro';
+import type { TocItem } from '@/lib/html/enhance';
+import { t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  html: string;
+  toc: TocItem[];
+  lang: Lang;
+  /** Language of the text when it differs from the page. */
+  contentLang?: string;
+}
+
+const { html, toc: all, lang, contentLang } = Astro.props;
+const toc = all.filter((item) => item.level === 2);
+---
+{toc.length > 1 ? (
+  <div class="container doc">
+    <nav class="toc toc--side" aria-labelledby="toc-title">
+      <p class="toc__title" id="toc-title">{t(lang, 'toc.title')}</p>
+      <ol role="list">{toc.map((item) => <li><a href={`#${item.id}`} lang={contentLang}>{item.text}</a></li>)}</ol>
+    </nav>
+    <div class="doc__main">
+      <details class="toc toc-mobile">
+        <summary>{t(lang, 'toc.title')} <Icon name="chevronDown" size={18} /></summary>
+        <ol role="list">{toc.map((item) => <li><a href={`#${item.id}`} lang={contentLang}>{item.text}</a></li>)}</ol>
+      </details>
+      <Prose html={html} lang={contentLang} />
+    </div>
+  </div>
+) : (
+  <div class="container page-body">
+    <Prose html={html} lang={contentLang} />
+  </div>
+)}

@@ -1,0 +1,42 @@
+---
+/**
+ * A responsive image: WebP variants from the media manifest with the original
+ * as fallback. Renders nothing when the file has not been migrated, so callers
+ * decide what a missing image looks like.
+ */
+import { hasMedia, mediaRecord } from '@/lib/images';
+import { href } from '@/lib/url';
+
+interface Props {
+  src: string;
+  alt: string;
+  /** CSS sizes attribute describing the rendered width. */
+  sizes: string;
+  /** Use square crops (portraits). */
+  square?: boolean;
+  loading?: 'lazy' | 'eager';
+  class?: string;
+}
+
+const { src, alt, sizes, square = false, loading = 'lazy', class: className } = Astro.props;
+const available = hasMedia(src);
+const record = available ? mediaRecord(src) : undefined;
+const variants = record ? (square ? record.square : record.variants) : [];
+const srcset = variants.map((v) => `${href(v.src)} ${v.width}w`).join(', ');
+const fallback = variants.at(-1)?.src ?? src;
+const width = square ? variants.at(-1)?.width : record?.width;
+const height = square ? variants.at(-1)?.width : record?.height;
+---
+{available && (
+  <img
+    src={href(fallback)}
+    srcset={srcset || undefined}
+    sizes={srcset ? sizes : undefined}
+    alt={alt}
+    width={width}
+    height={height}
+    loading={loading}
+    decoding="async"
+    class={className}
+  />
+)}

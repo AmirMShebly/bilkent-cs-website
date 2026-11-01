@@ -1,0 +1,31 @@
+---
+/** Renders inline tokens from the people parser: text, links and e-mail addresses. */
+import type { Inline } from '@/lib/html/people';
+import { t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  inlines: Inline[];
+  lang: Lang;
+  /** Turn a phone number into a tel: link. */
+  phone?: boolean;
+}
+
+const { inlines, lang, phone = false } = Astro.props;
+
+// Turkish landline numbers are written as "(312) 290 1218": ten digits without the leading 0.
+function telHref(text: string): string | undefined {
+  const digits = text.replace(/\D/g, '');
+  return digits.length === 10 ? `tel:+90${digits}` : undefined;
+}
+---
+{inlines.map((inline) =>
+  inline.type === 'text' ? (
+    phone && telHref(inline.text) ? <a href={telHref(inline.text)}>{inline.text}</a> : inline.strong ? <strong>{inline.text}</strong> : inline.text
+  ) : inline.type === 'email' ? (
+    <span class="email" data-user={inline.user} data-domain={inline.domain}>{inline.label}</span>
+  ) : inline.href ? (
+    <a href={inline.href} data-legacy-media={inline.legacyMedia ? '' : undefined} data-link-fixed={inline.fixedFrom}>{inline.text}</a>
+  ) : (
+    <span class="link-unresolved" data-original-href={inline.original} title={t(lang, 'link.unresolved')}>{inline.text}</span>
+  ),
+)}

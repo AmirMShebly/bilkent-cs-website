@@ -1,0 +1,56 @@
+---
+import Icon from '@/components/Icon.astro';
+import { footerAbout, footerQuickLinks, localize } from '@/config/navigation';
+import { site } from '@/config/site';
+import { isMediaAvailable } from '@/lib/media';
+import { href } from '@/lib/url';
+import { t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+// The year the site was built, so the notice never goes stale (the live site still shows 2025).
+const buildYear = new Date().getFullYear();
+const socialIcon = { LinkedIn: 'linkedin', X: 'x', YouTube: 'youtube' } as const;
+// An upload that is not in public/ is linked on the current site, and marked for the verification report.
+const isLegacy = (path: string) => path.startsWith('/wp-content/') && !isMediaAvailable(path);
+const target = (path: string) => (isLegacy(path) ? `${site.legacyOrigin}${path}` : href(path));
+---
+<footer class="footer">
+  <div class="container footer__top">
+    <div class="footer__brand">
+      <p class="brand__text">
+        <span class="brand__uni">{t(lang, 'site.university')}</span>{' '}
+        <span class="brand__dept">{t(lang, 'site.department')}</span>
+      </p>
+      <address class="footer__address">
+        {t(lang, 'footer.address1')}<br />
+        {t(lang, 'footer.address2')}<br />
+        {t(lang, 'footer.address3')}<br />
+        {t(lang, 'footer.phone')}: <a href={site.contact.phoneUri}>{site.contact.phone}</a><br />
+        {t(lang, 'footer.fax')}: {site.contact.fax}
+      </address>
+    </div>
+    <nav aria-labelledby="ds-footer-about">
+      <h2 id="ds-footer-about">{t(lang, 'footer.about')}</h2>
+      <ul role="list">{footerAbout.map((l) => <li><a href={href(localize(l.href, lang))}>{l.label[lang]}</a></li>)}</ul>
+    </nav>
+    <nav aria-labelledby="ds-footer-quick">
+      <h2 id="ds-footer-quick">{t(lang, 'footer.quickLinks')}</h2>
+      <ul role="list">{footerQuickLinks.map((l) => <li><a href={target(localize(l.href, lang))} data-legacy-media={isLegacy(localize(l.href, lang)) ? '' : undefined}>{l.label[lang]}</a></li>)}</ul>
+    </nav>
+    <section aria-labelledby="ds-footer-follow">
+      <h2 id="ds-footer-follow">{t(lang, 'footer.follow')}</h2>
+      <ul class="footer__social" role="list">
+        {site.social.map((s) => (
+          <li><a href={s.href}><Icon name={socialIcon[s.network]} size={18} /> {s.label}<span class="visually-hidden"> ({s.network})</span></a></li>
+        ))}
+      </ul>
+    </section>
+  </div>
+  <div class="container footer__bottom">
+    <p>{t(lang, 'footer.copyrightLabel')} © {buildYear} – {t(lang, 'footer.copyright')}</p>
+  </div>
+</footer>

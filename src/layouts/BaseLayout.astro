@@ -1,0 +1,83 @@
+---
+import SiteHeader from '@/components/SiteHeader.astro';
+import SiteFooter from '@/components/SiteFooter.astro';
+import { site } from '@/config/site';
+import { allowIndexing } from '@/lib/env';
+import { hasMedia } from '@/lib/images';
+import type { SwitchTarget } from '@/lib/routes';
+import { href } from '@/lib/url';
+import { languages, t, type Lang } from '@/i18n/ui';
+import '@/styles/index.css';
+
+interface Props {
+  lang: Lang;
+  /** Page title; the site name is appended. Omit on the homepage. */
+  title?: string;
+  description?: string;
+  /** Root-relative path of each language version of this page (exact translations only). */
+  alternates: Partial<Record<Lang, string>>;
+  /** Language switcher target; defaults to the other-language alternate or homepage. */
+  switchTarget?: SwitchTarget;
+  ogType?: 'website' | 'article';
+  /** Image for link previews (a root-relative upload path). */
+  ogImage?: string;
+  /** False for pages without a URL of their own (the 404 page). */
+  canonical?: boolean;
+  /** RSS feed to announce (defaults to the site feed in this language). */
+  feed?: string;
+}
+
+const { lang, title, description, alternates, switchTarget, ogType = 'website', ogImage, canonical: hasCanonical = true, feed } = Astro.props;
+const feedPath = feed ?? (lang === 'en' ? '/rss.xml' : '/tr/rss.xml');
+const siteTitle = t(lang, 'site.title');
+const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const absolute = (path: string) => new URL(href(path), Astro.site).href;
+const otherLang: Lang = lang === 'en' ? 'tr' : 'en';
+const target: SwitchTarget = switchTarget ?? (alternates[otherLang]
+  ? { path: alternates[otherLang]!, exact: true }
+  : { path: otherLang === 'en' ? '/' : '/tr/', exact: false });
+const hasTranslation = Boolean(alternates.en && alternates.tr);
+// Link previews show the post's image, or the department emblem.
+const previewImage = ogImage ?? (hasMedia(site.emblem) ? site.emblem : undefined);
+---
+<!doctype html>
+<html lang={languages[lang].htmlLang} class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>document.documentElement.classList.replace('no-js', 'js');</script>
+    <title>{fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    {!allowIndexing && <meta name="robots" content="noindex, nofollow" />}
+    {hasCanonical && <link rel="canonical" href={canonical.href} />}
+    {hasTranslation && Object.entries(alternates).map(([code, path]) => (
+      <link rel="alternate" hreflang={languages[code as Lang].htmlLang} href={absolute(path)} />
+    ))}
+    {hasTranslation && <link rel="alternate" hreflang="x-default" href={absolute(alternates.en!)} />}
+    {hasMedia(site.emblem) && <link rel="icon" href={href(site.emblem)} type="image/png" />}
+    <link rel="sitemap" href={href('/sitemap.xml')} />
+    <link rel="alternate" type="application/rss+xml" title={t(lang, 'feed.title', { name: t(lang, 'site.department') })} href={href(feedPath)} />
+    <meta name="theme-color" content="#061634" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={siteTitle} />
+    <meta property="og:title" content={fullTitle} />
+    {hasCanonical && <meta property="og:url" content={canonical.href} />}
+    <meta property="og:locale" content={languages[lang].ogLocale} />
+    {hasTranslation && <meta property="og:locale:alternate" content={languages[otherLang].ogLocale} />}
+    {description && <meta property="og:description" content={description} />}
+    {previewImage && <meta property="og:image" content={absolute(previewImage)} />}
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body class="ds">
+    <SiteHeader lang={lang} switchTarget={target} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter lang={lang} />
+    <script>
+      import { initSite } from '@/scripts/site';
+      initSite();
+    </script>
+  </body>
+</html>

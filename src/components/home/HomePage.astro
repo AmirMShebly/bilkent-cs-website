@@ -1,0 +1,242 @@
+---
+/**
+ * Homepage. All text is department content: the mission statement from the
+ * mission page, the latest announcements and news, research areas, the
+ * programme cards of the live homepage, and figures read from department
+ * pages (each linking to its source).
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import DateBox from '@/components/DateBox.astro';
+import Icon from '@/components/Icon.astro';
+import Picture from '@/components/Picture.astro';
+import Portrait from '@/components/Portrait.astro';
+import { homeQuickLinks, isGroup, localize, mainNav } from '@/config/navigation';
+import { homeInfoCards } from '@/config/site';
+import { categories } from '@/config/categories';
+import { formatDate, leadImage, shortExcerpt } from '@/lib/content';
+import { archivePath, directory, facts, latestIn, missionStatement, pagePath, researchAreas } from '@/lib/data';
+import { frameFit, hasMedia } from '@/lib/images';
+import { missingMediaHtml } from '@/lib/placeholder';
+import { href, isExternal } from '@/lib/url';
+import { getSiteIndex } from '@/lib/routes';
+import { languages, t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+
+const mission = await missionStatement(lang);
+const [featured, ...moreAnnouncements] = await latestIn('announcements', lang, 6);
+const news = await latestIn('news', lang, 5);
+const areas = await researchAreas(lang);
+const figures = await facts(lang);
+const profiles = await directory(pagePath.faculty[lang], lang);
+const faces = profiles.filter((p) => hasMedia(p.photo)).slice(0, 8);
+const featuredImage = featured ? leadImage(featured) : null;
+const index = await getSiteIndex();
+const titleOf = (path: string) => index.pages.find((p) => p.path === path)?.title ?? '';
+const education = mainNav.filter(isGroup).find((g) => g.children.some((c) => localize(c.href, lang) === pagePath.courses[lang]));
+---
+<BaseLayout lang={lang} alternates={{ en: '/', tr: '/tr/' }} description={t(lang, 'meta.home')}>
+  <section class="hero">
+    <div class="container hero__inner">
+      <div>
+        <p class="eyebrow">{t(lang, 'site.university')} · {t(lang, 'site.faculty')}</p>
+        <h1>{t(lang, 'site.department')}</h1>
+        <p class="hero__mission">{mission.text}</p>
+        <div class="hero__actions">
+          <a class="btn btn--on-dark" href={href(mission.path)}>{titleOf(mission.path)} <Icon name="arrowRight" size={18} /></a>
+          <a class="btn btn--ghost-dark" href={href(pagePath.faculty[lang])}>{titleOf(pagePath.faculty[lang])}</a>
+        </div>
+      </div>
+
+      <div class="hero__panel">
+        {featured && (
+          <article class="feature">
+            {featuredImage && hasMedia(featuredImage.src) && (
+              <div class:list={['feature__media', `media-fit--${frameFit(featuredImage.src)}`]}>
+                <Picture src={featuredImage.src} alt="" sizes="(min-width: 64em) 40vw, 100vw" loading="eager" />
+              </div>
+            )}
+            <div class="feature__body">
+              <p class="tag">{categories.announcements[lang].name}</p>
+              <h2 class="feature__title"><a href={href(featured.path)}>{featured.title}</a></h2>
+              <p class="meta"><time datetime={featured.publishedAt}>{formatDate(featured.publishedAt, lang, 'long')}</time></p>
+            </div>
+          </article>
+        )}
+        <nav aria-label={t(lang, 'home.quickAccess')}>
+          <ul class="quick" role="list">
+            {homeQuickLinks.map((link) => {
+              const target = localize(link.href, lang);
+              const otherLang = link.targetLang && link.targetLang !== lang ? link.targetLang : undefined;
+              return (
+                <li>
+                  <a href={href(target)} hreflang={otherLang ? languages[otherLang].htmlLang : undefined}>
+                    <span>{link.label[lang]}</span>
+                    {otherLang ? (
+                      <span class="badge-lang"><span class="visually-hidden"> (</span>{otherLang === 'tr' ? t(lang, 'lang.turkishOnly') : t(lang, 'lang.englishOnly')}<span class="visually-hidden">)</span></span>
+                    ) : isExternal(target) ? (
+                      <Icon name="external" size={16} />
+                    ) : (
+                      <Icon name="arrowRight" size={16} />
+                    )}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--facts" aria-labelledby="facts-title">
+    <div class="container">
+      <h2 id="facts-title" class="visually-hidden">{t(lang, 'home.facts')}</h2>
+      <dl class="facts">
+        {figures.map((f) => (
+          <div class="fact">
+            <dt class="fact__label">{f.label}</dt>
+            <dd class="fact__value">{f.value}</dd>
+            <dd class="fact__source"><a href={href(f.source.path)}>{f.source.label}</a></dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section class="section section--news" aria-labelledby="news-title">
+    <div class="container news-layout">
+      <div>
+        <div class="section-head">
+          <h2 id="news-title">{categories.news[lang].name}</h2>
+          <a class="link-arrow" href={href(archivePath('news', lang))}>{t(lang, 'home.allNews')} <Icon name="arrowRight" size={18} /></a>
+        </div>
+        <ul class="news-grid" role="list">
+          {news.map((post, i) => {
+            const image = leadImage(post);
+            return (
+              <li class="story">
+                {image && hasMedia(image.src) && (
+                  <div class:list={['story__media', `media-fit--${frameFit(image.src)}`]}>
+                    <Picture src={image.src} alt="" sizes={i === 0 ? '(min-width: 64em) 30vw, 100vw' : '(min-width: 64em) 22vw, (min-width: 40em) 45vw, 100vw'} />
+                  </div>
+                )}
+                <p class="meta"><time datetime={post.publishedAt}>{formatDate(post.publishedAt, lang, 'long')}</time></p>
+                <h3 class="story__title"><a href={href(post.path)}>{post.title}</a></h3>
+                {i === 0 && <p class="story__summary">{shortExcerpt(post.excerpt ?? post.summary, 32)}</p>}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      <aside aria-labelledby="notices-title">
+        <div class="section-head">
+          <h2 id="notices-title">{categories.announcements[lang].name}</h2>
+          <a class="link-arrow" href={href(archivePath('announcements', lang))}>{t(lang, 'home.allAnnouncements')} <Icon name="arrowRight" size={18} /></a>
+        </div>
+        <ol class="notices" role="list">
+          {moreAnnouncements.map((post) => (
+            <li class="notice">
+              <DateBox iso={post.publishedAt} lang={lang} />
+              <div>
+                <h3 class="notice__title"><a href={href(post.path)}>{post.title}</a></h3>
+                <p class="meta">{new Date(`${post.publishedAt}Z`).getUTCFullYear()}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section section--tint" aria-labelledby="research-title">
+    <div class="container">
+      <div class="section-head">
+        <h2 id="research-title">{titleOf(pagePath.research[lang])}</h2>
+        <a class="link-arrow" href={href(pagePath.research[lang])}>{t(lang, 'home.allResearch')} <Icon name="arrowRight" size={18} /></a>
+      </div>
+      <ul class="areas" role="list">
+        {areas.map((area, i) => (
+          <li class="area">
+            <span class="area__index">{String(i + 1).padStart(2, '0')}</span>
+            <div>
+              <h3 class="area__title"><a href={href(area.path)}>{area.title}</a></h3>
+              {(area.people.length > 0 || area.courses.length > 0) && (
+                <p class="area__meta">
+                  {[
+                    area.people.length === 0 ? '' : area.people.length === 1 ? t(lang, 'home.areaPeopleOne') : t(lang, 'home.areaPeople', { count: area.people.length }),
+                    area.courses.length === 0 ? '' : area.courses.length === 1 ? t(lang, 'home.areaCoursesOne') : t(lang, 'home.areaCourses', { count: area.courses.length }),
+                  ].filter(Boolean).join(' · ')}
+                </p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="study-title">
+    <div class="container">
+      <div class="section-head">
+        <h2 id="study-title">{education?.label[lang]}</h2>
+      </div>
+      <div class="programs">
+        {homeInfoCards.map((card) => {
+          const textLang = card.textLang && card.textLang !== lang ? languages[card.textLang].htmlLang : undefined;
+          const isLogo = card.image.src.includes('abet');
+          const linkLang = card.link?.targetLang && card.link.targetLang !== lang ? card.link.targetLang : undefined;
+          return (
+            <article class="program" lang={textLang}>
+              <div class:list={['program__media', { 'program__media--logo': isLogo }]}>
+                {hasMedia(card.image.src) ? (
+                  <Picture src={card.image.src} alt={card.image.alt[lang]} sizes="(min-width: 56em) 30vw, 100vw" />
+                ) : (
+                  <Fragment set:html={missingMediaHtml({ src: card.image.src, alt: card.image.alt[lang], label: t(lang, 'media.missing') })} />
+                )}
+              </div>
+              <div class="program__body">
+                <h3>{card.title[lang]}</h3>
+                {card.body[lang].split('\n').map((p) => <p>{p}</p>)}
+              </div>
+              {card.link && (
+                <div class="program__foot">
+                  <a class="link-arrow" href={href(card.link.href)} lang={textLang ? languages[lang].htmlLang : undefined} hreflang={linkLang}>
+                    {card.link.label[lang]}
+                    {linkLang && <span class="badge-lang"><span class="visually-hidden"> (</span>{linkLang === 'tr' ? t(lang, 'lang.turkishOnly') : t(lang, 'lang.englishOnly')}<span class="visually-hidden">)</span></span>}
+                    <Icon name={isExternal(card.link.href) ? 'external' : 'arrowRight'} size={18} />
+                  </a>
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </div>
+  </section>
+
+  {faces.length > 0 && (
+    <section class="section section--alt" aria-labelledby="faculty-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="faculty-title">{titleOf(pagePath.faculty[lang])}</h2>
+          <a class="link-arrow" href={href(pagePath.faculty[lang])}>{t(lang, 'home.allFaculty', { count: profiles.length })} <Icon name="arrowRight" size={18} /></a>
+        </div>
+        <ul class="faces" role="list">
+          {faces.map((p) => (
+            <li class="face">
+              <Portrait src={p.photo} name={p.name} sizes="(min-width: 64em) 12vw, 40vw" lang={lang} />
+              <p class="face__name"><a href={href(pagePath.faculty[lang])}>{p.name}</a></p>
+              <p class="face__title">{p.title}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  )}
+</BaseLayout>

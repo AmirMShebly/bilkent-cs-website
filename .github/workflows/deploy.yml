@@ -1,0 +1,127 @@
+name: Verify and deploy
+
+# Every push to main and every pull request runs the full verification.
+# Publishing to GitHub Pages happens only when started by hand:
+# Actions → Verify and deploy → Run workflow.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      allow_indexing:
+        description: Let search engines index the site (only for the production launch)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Content, links, build, browser and accessibility checks
+    runs-on: ubuntu-latest
+    env:
+      # A GitHub Pages project-site build, the same shape as the deployment.
+      SITE_URL: https://${{ github.repository_owner }}.github.io
+      BASE_PATH: /${{ github.event.repository.name }}/
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Node.js requirement matches the lockfile
+        run: npm run check:engines
+
+      # Generated content must be exactly what the filtered dataset produces,
+      # field by field; stale or hand-edited content fails here.
+      - name: Generated content against the source dataset
+        run: npm run verify:content
+
+      - uses: actions/cache@v6
+        with:
+          path: public/_media
+          key: media-${{ hashFiles('public/wp-content/uploads/**', 'scripts/process-media.ts') }}
+
+      - name: Build (image variants, type check, static site)
+        run: npm run build
+
+      - name: Routes, links, language pairs and word-level parity
+        run: npm run verify
+
+      - name: Install the browser for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser, responsive and accessibility checks (390 px and 1366 px)
+        run: npm run qa:browser
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: verification-reports
+          path: reports/
+
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name == 'workflow_dispatch'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      PUBLIC_ALLOW_INDEXING: ${{ inputs.allow_indexing && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # base_path is "/<repo>" for a project site and "" for a custom domain
+      # or a <owner>.github.io repository.
+      - id: pages
+        uses: actions/configure-pages@v6
+
+      - run: npm ci
+
+      - uses: actions/cache@v6
+        with:
+          path: public/_media
+          key: media-${{ hashFiles('public/wp-content/uploads/**', 'scripts/process-media.ts') }}
+
+      - name: Build for the Pages address
+        run: npm run build
+        env:
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+
+      - name: Verify the build that will be published
+        run: npm run verify
+        env:
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v5

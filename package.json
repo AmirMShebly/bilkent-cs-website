@@ -1,0 +1,45 @@
+{
+  "name": "bilkent-cs-website",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static Astro rebuild of the Bilkent University Computer Engineering Department website.",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "scripts": {
+    "dev": "npm run media:process && astro dev",
+    "build": "npm run media:process && astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "verify": "tsx scripts/verify-site.ts",
+    "qa:browser": "tsx scripts/qa-browser.ts",
+    "import:content": "tsx scripts/import-wordpress.ts",
+    "fetch:media": "tsx scripts/fetch-media.ts",
+    "media:process": "tsx scripts/process-media.ts",
+    "inventory:assets": "tsx scripts/asset-inventory.ts",
+    "check:engines": "tsx scripts/check-engines.ts",
+    "verify:content": "tsx scripts/import-wordpress.ts --check && tsx scripts/verify-content.ts && tsx scripts/test-dataset.ts",
+    "dataset:prepare": "tsx scripts/prepare-dataset.ts",
+    "test:dataset": "tsx scripts/test-dataset.ts",
+    "links:external": "tsx scripts/check-external-links.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/source-sans-3": "^5.3.1",
+    "@fontsource-variable/source-serif-4": "^5.3.1",
+    "astro": "7.3.8",
+    "cheerio": "^1.2.0",
+    "domhandler": "^5.0.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@types/node": "^22.20.5",
+    "@types/semver": "7.8.0",
+    "axe-core": "^4.14.0",
+    "playwright": "^1.63.0",
+    "semver": "7.7.2",
+    "sharp": "0.35.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,29 @@
+---
+/** Sibling pages of the current page as tabs (for example the People pages). */
+import Icon from '@/components/Icon.astro';
+import type { Section } from '@/lib/sections';
+import { href, stripBase } from '@/lib/url';
+import { t, type Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+  section: Section;
+}
+
+const { lang, section } = Astro.props;
+const here = stripBase(Astro.url.pathname);
+---
+<nav class="subnav" aria-label={`${t(lang, 'nav.inSection')}: ${section.title}`}>
+  <div class="container">
+    <ul role="list">
+      {section.links.map((link) => (
+        <li>
+          <a href={href(link.path)} aria-current={link.path === here ? 'page' : undefined}>
+            {link.label}
+            {link.external && <Icon name="external" size={14} label={t(lang, 'a11y.external')} />}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+</nav>

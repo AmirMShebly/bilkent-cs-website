@@ -1,0 +1,29 @@
+---
+import Picture from '@/components/Picture.astro';
+import { formatDate, leadImage, shortExcerpt } from '@/lib/content';
+import { frameFit, hasMedia } from '@/lib/images';
+import type { Entry } from '@/lib/routes';
+import { href } from '@/lib/url';
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  post: Entry;
+  lang: Lang;
+}
+
+const { post, lang } = Astro.props;
+const lead = leadImage(post);
+const image = lead && hasMedia(lead.src) ? lead : null;
+---
+<article class:list={['entry', { 'entry--with-image': image }]}>
+  <div class="entry__body">
+    <p class="meta"><time datetime={post.publishedAt}>{formatDate(post.publishedAt, lang, 'long')}</time></p>
+    <h2 class="entry__title"><a href={href(post.path)}>{post.title}</a></h2>
+    <p class="entry__summary">{shortExcerpt(post.excerpt ?? post.summary, 40)}</p>
+  </div>
+  {image && (
+    <div class:list={['entry__media', `media-fit--${frameFit(image.src)}`]}>
+      <Picture src={image.src} alt="" sizes="(min-width: 40em) 16rem, 6rem" />
+    </div>
+  )}
+</article>

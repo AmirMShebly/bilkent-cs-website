@@ -1,0 +1,28 @@
+---
+/** A stand-alone page that forwards an old URL to its current address. */
+import { href } from '@/lib/url';
+import { languages, t } from '@/i18n/ui';
+import type { RedirectRoute } from '@/lib/routes';
+
+interface Props {
+  route: RedirectRoute;
+}
+
+const { route } = Astro.props;
+const target = href(route.to);
+const absolute = new URL(target, Astro.site).href;
+---
+<!doctype html>
+<html lang={languages[route.lang].htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{route.title}</title>
+    <link rel="canonical" href={absolute} />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+  </head>
+  <body>
+    <p>{t(route.lang, 'redirect.moved')} <a href={target}>{route.title}</a></p>
+  </body>
+</html>

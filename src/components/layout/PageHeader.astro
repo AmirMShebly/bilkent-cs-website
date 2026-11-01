@@ -1,0 +1,20 @@
+---
+import Breadcrumbs from './Breadcrumbs.astro';
+import type { Crumb } from '@/lib/sections';
+import type { Lang } from '@/i18n/ui';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  crumbs: Crumb[];
+}
+
+const { lang, title, crumbs } = Astro.props;
+---
+<header class="pagehead">
+  <div class="container">
+    <Breadcrumbs lang={lang} items={crumbs} />
+    <h1>{title}</h1>
+    <slot />
+  </div>
+</header>

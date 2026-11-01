@@ -1,0 +1,45 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/layout/PageHeader.astro';
+import SectionTabs from '@/components/layout/SectionTabs.astro';
+import Document from '@/components/content/Document.astro';
+import PeopleDirectory from '@/components/content/PeopleDirectory.astro';
+import { englishBodyPages, peoplePages } from '@/config/content-rules';
+import { denseDirectories, directory, pagePath, researchAreas } from '@/lib/data';
+import { enhanceHtml } from '@/lib/html/enhance';
+import { transformContent } from '@/lib/html/transform';
+import { languageTarget, type PageRoute, type SiteIndex } from '@/lib/routes';
+import { breadcrumbsFor, describe, linkIndexOf, sectionFor } from '@/lib/sections';
+import { t } from '@/i18n/ui';
+
+interface Props {
+  route: PageRoute;
+  index: SiteIndex;
+}
+
+const { route, index } = Astro.props;
+const { entry, lang } = route;
+const section = sectionFor(route, index);
+const people = peoplePages.has(route.path) ? await directory(route.path, lang) : undefined;
+const areas = route.path === pagePath.faculty[lang] ? await researchAreas(lang) : undefined;
+const body = people
+  ? undefined
+  : enhanceHtml(transformContent(entry.html, { lang, index: linkIndexOf(index) }), { anchorLabel: t(lang, 'a11y.anchor') });
+---
+<BaseLayout
+  lang={lang}
+  title={route.title}
+  description={describe(entry, people?.map((p) => p.fullName))}
+  alternates={index.alternates.get(route.path) ?? { [lang]: route.path }}
+  switchTarget={languageTarget(index, route)}
+>
+  <PageHeader lang={lang} title={route.title} crumbs={breadcrumbsFor(route, index)} />
+  {section && <SectionTabs lang={lang} section={section} />}
+  {people ? (
+    <div class="container">
+      <PeopleDirectory people={people} lang={lang} dense={denseDirectories.has(route.path)} areas={areas} />
+    </div>
+  ) : (
+    <Document html={body!.html} toc={body!.toc} lang={lang} contentLang={englishBodyPages.has(route.path) ? 'en' : undefined} />
+  )}
+</BaseLayout>

@@ -1,0 +1,10 @@
+---
+/** Migrated WordPress content, already transformed by transformContent(). */
+interface Props {
+  html: string;
+  /** Set when the content is in another language than the page (e.g. English text on a Turkish page). */
+  lang?: string;
+}
+const { html, lang } = Astro.props;
+---
+<div class="prose" lang={lang} set:html={html} />
